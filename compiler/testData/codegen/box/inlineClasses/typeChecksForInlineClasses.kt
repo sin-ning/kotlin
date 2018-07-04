@@ -1,3 +1,4 @@
+// IGNORE_BACKEND: JVM_IR
 // !LANGUAGE: +InlineClasses
 
 inline class AsAny(val a: Any?) {

@@ -1,3 +1,4 @@
+// IGNORE_BACKEND: JVM_IR
 // !LANGUAGE: +InlineClasses
 // IGNORE_BACKEND: JS_IR
 
