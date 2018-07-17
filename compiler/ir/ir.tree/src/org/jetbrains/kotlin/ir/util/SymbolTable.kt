@@ -152,11 +152,10 @@ open class SymbolTable {
     private val fieldSymbolTable = FlatSymbolTable<PropertyDescriptor, IrField, IrFieldSymbol>()
     private val simpleFunctionSymbolTable = FlatSymbolTable<FunctionDescriptor, IrSimpleFunction, IrSimpleFunctionSymbol>()
 
-    private val globalTypeParameterSymbolTable = FlatSymbolTable<TypeParameterDescriptor, IrTypeParameter, IrTypeParameterSymbol>()
-    private val scopedTypeParameterSymbolTable = ScopedSymbolTable<TypeParameterDescriptor, IrTypeParameter, IrTypeParameterSymbol>()
+    private val typeParameterSymbolTable = FlatSymbolTable<TypeParameterDescriptor, IrTypeParameter, IrTypeParameterSymbol>()
     private val valueParameterSymbolTable = ScopedSymbolTable<ParameterDescriptor, IrValueParameter, IrValueParameterSymbol>()
     private val variableSymbolTable = ScopedSymbolTable<VariableDescriptor, IrVariable, IrVariableSymbol>()
-    private val scopedSymbolTables = listOf(valueParameterSymbolTable, variableSymbolTable, scopedTypeParameterSymbolTable)
+    private val scopedSymbolTables: List<ScopedSymbolTable<*, *, *>> = listOf(valueParameterSymbolTable, variableSymbolTable)
 
     fun declareFile(fileEntry: SourceManager.FileEntry, packageFragmentDescriptor: PackageFragmentDescriptor): IrFile =
         IrFileImpl(fileEntry, IrFileSymbolImpl(packageFragmentDescriptor))
@@ -272,31 +271,24 @@ open class SymbolTable {
 
     val unboundSimpleFunctions: Set<IrSimpleFunctionSymbol> get() = simpleFunctionSymbolTable.unboundSymbols
 
-    fun declareGlobalTypeParameter(
+    fun declareTypeParameter(
         startOffset: Int,
         endOffset: Int,
         origin: IrDeclarationOrigin,
-        descriptor: TypeParameterDescriptor
+        descriptor: TypeParameterDescriptor,
+        typeParameterFactory: (IrTypeParameterSymbol) -> IrTypeParameter = { IrTypeParameterImpl(startOffset, endOffset, origin, it) }
     ): IrTypeParameter =
-        globalTypeParameterSymbolTable.declare(
+        typeParameterSymbolTable.declare(
             descriptor,
             { IrTypeParameterSymbolImpl(descriptor) },
-            { IrTypeParameterImpl(startOffset, endOffset, origin, it) }
+            typeParameterFactory
         )
 
-    fun declareScopedTypeParameter(
-        startOffset: Int,
-        endOffset: Int,
-        origin: IrDeclarationOrigin,
-        descriptor: TypeParameterDescriptor
-    ): IrTypeParameter =
-        scopedTypeParameterSymbolTable.declare(
-            descriptor,
-            { IrTypeParameterSymbolImpl(descriptor) },
-            { IrTypeParameterImpl(startOffset, endOffset, origin, it) }
-        )
+    open fun referenceTypeParameter(descriptor: TypeParameterDescriptor) =
+        typeParameterSymbolTable.referenced(descriptor) { IrTypeParameterSymbolImpl(descriptor) }
 
-    val unboundTypeParameters: Set<IrTypeParameterSymbol> get() = globalTypeParameterSymbolTable.unboundSymbols
+    val unboundTypeParameters: Set<IrTypeParameterSymbol> get() = typeParameterSymbolTable.unboundSymbols
+
 
     fun declareValueParameter(
         startOffset: Int,
@@ -320,12 +312,6 @@ open class SymbolTable {
         valueParameterSymbolTable.referenced(descriptor) {
             throw AssertionError("Undefined parameter referenced: $descriptor\n${valueParameterSymbolTable.dump()}")
         }
-
-    open fun referenceTypeParameter(classifier: TypeParameterDescriptor): IrTypeParameterSymbol =
-        scopedTypeParameterSymbolTable.get(classifier)
-                ?: globalTypeParameterSymbolTable.referenced(classifier) {
-                    throw AssertionError("Undefined type parameter referenced: $classifier")
-                }
 
     val unboundValueParameters: Set<IrValueParameterSymbol> get() = valueParameterSymbolTable.unboundSymbols
 

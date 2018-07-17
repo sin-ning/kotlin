@@ -155,9 +155,18 @@ class DeclarationStubGenerator(
     }
 
     internal fun generateTypeParameterStub(descriptor: TypeParameterDescriptor): IrTypeParameter {
-        return IrLazyTypeParameter(
-            UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin,
-            IrTypeParameterSymbolImpl(descriptor), this, typeTranslator
-        )
+        val referenced = symbolTable.referenceTypeParameter(descriptor)
+        if (referenced.isBound) {
+            return referenced.owner
+        }
+
+        return symbolTable.declareTypeParameter(
+            UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin, descriptor
+        ) {
+            IrLazyTypeParameter(
+                UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin,
+                IrTypeParameterSymbolImpl(descriptor), this, typeTranslator
+            )
+        }
     }
 }

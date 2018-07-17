@@ -56,11 +56,16 @@ class ExternalDependenciesGenerator(
             ArrayList(symbolTable.unboundSimpleFunctions).forEach {
                 stubGenerator.generateFunctionStub(it.descriptor)
             }
+            ArrayList(symbolTable.unboundTypeParameters).forEach {
+                stubGenerator.generateTypeParameterStub(it.descriptor)
+            }
+
             assert(symbolTable.unboundClasses.isEmpty())
             assert(symbolTable.unboundConstructors.isEmpty())
             assert(symbolTable.unboundEnumEntries.isEmpty())
             assert(symbolTable.unboundEnumEntries.isEmpty())
             assert(symbolTable.unboundSimpleFunctions.isEmpty())
+            assert(symbolTable.unboundTypeParameters.isEmpty())
         }
 
         private fun generateModuleStub(collector: DependenciesCollector, moduleDescriptor: ModuleDescriptor): IrModuleFragment =
