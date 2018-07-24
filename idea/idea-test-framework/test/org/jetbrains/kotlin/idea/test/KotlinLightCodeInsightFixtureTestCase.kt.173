@@ -33,6 +33,7 @@ import org.apache.log4j.Logger
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.idea.compiler.configuration.KotlinCompilerSettings
 import org.jetbrains.kotlin.idea.facet.KotlinFacet
 import org.jetbrains.kotlin.idea.facet.configureFacet
 import org.jetbrains.kotlin.idea.facet.getOrCreateFacet
@@ -200,6 +201,8 @@ fun configureCompilerOptions(fileText: String, project: Project, module: Module)
             }
             compilerSettings.additionalArguments = options
             facetSettings.updateMergedArguments()
+
+            KotlinCompilerSettings.getInstance(project).update { this.additionalArguments = options }
         }
     }
 }
