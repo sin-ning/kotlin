@@ -119,6 +119,11 @@ public class MultiModuleSafeDeleteTestGenerated extends AbstractMultiModuleSafeD
         runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectClassSecondaryConstructorParameter/expectsAndActualsByExpectClassSecondaryConstructorParameter.test");
     }
 
+    @TestMetadata("byExpectCompanion/byExpectCompanion.test")
+    public void testByExpectCompanion_ByExpectCompanion() throws Exception {
+        runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectCompanion/byExpectCompanion.test");
+    }
+
     @TestMetadata("byExpectFun/byExpectFun.test")
     public void testByExpectFun_ByExpectFun() throws Exception {
         runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectFun/byExpectFun.test");
