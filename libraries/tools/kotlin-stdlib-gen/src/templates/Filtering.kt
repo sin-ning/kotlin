@@ -49,7 +49,7 @@ object Filtering : TemplateGroupBase() {
             require(n >= 0) { "Requested element count $n is less than zero." }
             if (n == 0) return toList()
             val list: ArrayList<T>
-            if (this is Collection<*>) {
+            if (this is Collection<T>) {
                 val resultSize = size - n
                 if (resultSize <= 0)
                     return emptyList()

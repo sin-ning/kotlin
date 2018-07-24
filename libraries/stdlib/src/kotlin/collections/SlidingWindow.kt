@@ -31,10 +31,10 @@ internal fun <T> windowedIterator(iterator: Iterator<T>, size: Int, step: Int, p
             var skip = 0
             for (e in iterator) {
                 if (skip > 0) { skip -= 1; continue }
-                buffer.add(e)
+                buffer.add(e as T)
                 if (buffer.size == size) {
                     yield(buffer)
-                    if (reuseBuffer) buffer.clear() else buffer = ArrayList(size)
+                    if (reuseBuffer) buffer.clear() else buffer = ArrayList<T>(size) as ArrayList<T>
                     skip = gap
                 }
             }
