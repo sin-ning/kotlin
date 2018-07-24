@@ -134,6 +134,11 @@ public class MultiModuleSafeDeleteTestGenerated extends AbstractMultiModuleSafeD
         runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectFunVarargParamerer/byExpectFunVarargParameter.test");
     }
 
+    @TestMetadata("byExpectObject/byExpectObject.test")
+    public void testByExpectObject_ByExpectObject() throws Exception {
+        runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectObject/byExpectObject.test");
+    }
+
     @TestMetadata("byExpectVal/byExpectVal.test")
     public void testByExpectVal_ByExpectVal() throws Exception {
         runTest("idea/testData/refactoring/safeDeleteMultiModule/byExpectVal/byExpectVal.test");

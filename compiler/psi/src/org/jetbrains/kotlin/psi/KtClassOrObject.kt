@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.psi
 import com.intellij.lang.ASTNode
 import com.intellij.navigation.ItemPresentation
 import com.intellij.navigation.ItemPresentationProviders
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.CheckUtil
@@ -28,6 +29,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.stubs.KotlinClassOrObjectStub
 import org.jetbrains.kotlin.psi.stubs.elements.KtStubElementTypes
+import java.util.*
 
 abstract class KtClassOrObject :
     KtTypeParameterListOwnerStub<KotlinClassOrObjectStub<out KtClassOrObject>>, KtDeclarationContainer, KtNamedDeclaration,
@@ -127,6 +129,53 @@ abstract class KtClassOrObject :
         } else {
             file.delete()
         }
+    }
+
+    override fun isEquivalentTo(another: PsiElement?): Boolean {
+        if (this === another) {
+            return true
+        }
+
+        if (another !is KtClassOrObject) {
+            return false
+        }
+
+        val fq1 = getQualifiedName() ?: return false
+        val fq2 = another.getQualifiedName() ?: return false
+        if (fq1 == fq2) {
+            val thisLocal = isLocal
+            if (thisLocal != another.isLocal) {
+                return false
+            }
+
+            // For non-local classes same fqn is enough
+            // Consider different instances of local classes non-equivalent
+            return !thisLocal
+        }
+
+        return false
+    }
+
+    protected fun getQualifiedName(): String? {
+        val stub = stub
+        if (stub != null) {
+            val fqName = stub.getFqName()
+            return fqName?.asString()
+        }
+
+        val parts = mutableListOf<String>()
+        var current: KtClassOrObject? = this
+        while (current != null) {
+            parts.add(current.name!!)
+            current = PsiTreeUtil.getParentOfType(current, KtClassOrObject::class.java)
+        }
+        val file = containingFile as? KtFile ?: return null
+        val fileQualifiedName = file.packageFqName.asString()
+        if (!fileQualifiedName.isEmpty()) {
+            parts.add(fileQualifiedName)
+        }
+        parts.reverse()
+        return parts.joinToString(separator = ".")
     }
 }
 
