@@ -29,8 +29,8 @@ class ConvertTrimIndentToTrimMarginIntention : SelfTargetingIntention<KtCallExpr
         val qualifiedExpression = element.getQualifiedExpressionForSelector()
         val template = (qualifiedExpression?.receiverExpression as? KtStringTemplateExpression) ?: return
 
-        val indent = template.entries.asSequence().mapNotNull {
-            val text = it.text
+        val indent = template.entries.asSequence().mapNotNull { stringTemplateEntry ->
+            val text = stringTemplateEntry.text
             if (text.isLineBreakOrBlank()) null else text.takeWhile { it.isWhitespace() }
         }.minBy { it.length } ?: ""
 

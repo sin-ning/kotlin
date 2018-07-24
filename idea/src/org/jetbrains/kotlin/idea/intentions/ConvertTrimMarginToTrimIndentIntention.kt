@@ -24,9 +24,12 @@ class ConvertTrimMarginToTrimIndentIntention : SelfTargetingIntention<KtCallExpr
         val marginPrefix = element.marginPrefix() ?: return false
 
         val entries = template.entries
-        if (!listOfNotNull(entries.firstOrNull(), entries.lastOrNull()).all { it.text.isLineBreakOrBlank() }) return false
-        return entries.drop(1).dropLast(1).all {
-            val text = it.text
+        if (!listOfNotNull(entries.firstOrNull(), entries.lastOrNull()).all { it.text.isLineBreakOrBlank() }) {
+            return false
+        }
+
+        return entries.drop(1).dropLast(1).all { stringTemplateEntry ->
+            val text = stringTemplateEntry.text
             text.isLineBreakOrBlank() || text.dropWhile { it.isWhitespace() }.startsWith(marginPrefix)
         }
     }
@@ -36,8 +39,8 @@ class ConvertTrimMarginToTrimIndentIntention : SelfTargetingIntention<KtCallExpr
         val template = (qualifiedExpression?.receiverExpression as? KtStringTemplateExpression) ?: return
         val marginPrefix = element.marginPrefix() ?: return
 
-        val indent = template.entries.asSequence().mapNotNull {
-            val text = it.text
+        val indent = template.entries.asSequence().mapNotNull { stringTemplateEntry ->
+            val text = stringTemplateEntry.text
             if (text.isLineBreakOrBlank()) null else text.takeWhile { it.isWhitespace() }
         }.minBy { it.length } ?: ""
 
