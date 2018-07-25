@@ -5,9 +5,11 @@
 
 package org.jetbrains.kotlin.idea.core.util
 
+import com.intellij.openapi.util.NullableLazyKey
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileWithId
 import com.intellij.openapi.vfs.newvfs.FileAttribute
+import com.intellij.util.NullableFunction
 import com.intellij.util.io.DataInputOutputUtil.readSeq
 import com.intellij.util.io.DataInputOutputUtil.writeSeq
 import com.intellij.util.io.IOUtil.readUTF
@@ -15,7 +17,7 @@ import com.intellij.util.io.IOUtil.writeUTF
 import java.io.*
 import kotlin.reflect.KProperty
 
-fun <T : Any> fileAttribute(
+fun <T : Any> cachedFileAttribute(
     name: String,
     version: Int,
     read: DataInputStream.() -> T,
@@ -27,11 +29,14 @@ fun <T : Any> fileAttribute(
     }
 }
 
-abstract class FileAttributeProperty<T : Any>(name: String, version: Int, private val default: T? = null) {
+abstract class FileAttributeProperty<T : Any>(name: String, version: Int, private val default: T? = null) :
+    NullableFunction<VirtualFile, T> {
+
     abstract fun readValue(input: DataInputStream): T
     abstract fun writeValue(output: DataOutputStream, value: T)
 
     private val attribute = FileAttribute(name, version, false)
+    private val cache = NullableLazyKey.create<T, VirtualFile>("FileAttributeProperty.$name", this)
 
     operator fun setValue(file: VirtualFile, property: KProperty<*>, newValue: T?) {
         if (file !is VirtualFileWithId) return
@@ -41,9 +46,15 @@ abstract class FileAttributeProperty<T : Any>(name: String, version: Int, privat
                 writeValue(output, value)
             }
         }
+
+        // clear cache
+        file.putUserData(cache, null)
     }
 
-    operator fun getValue(file: VirtualFile, property: KProperty<*>): T? {
+    operator fun getValue(file: VirtualFile, property: KProperty<*>): T? =
+        cache.getValue(file)
+
+    override fun `fun`(file: VirtualFile?): T? {
         if (file !is VirtualFileWithId) return null
 
         return attribute.readAttribute(file)?.use { input ->
@@ -57,7 +68,7 @@ abstract class FileAttributeProperty<T : Any>(name: String, version: Int, privat
 fun DataInput.readStringList(): List<String> = readSeq(this) { readString() }
 fun DataInput.readFileList(): List<File> = readSeq(this) { readFile() }
 fun DataInput.readString(): String = readUTF(this)
-fun DataInput.readFile() = readUTF(this).let { File(it) }
+fun DataInput.readFile() = File(readUTF(this))
 
 fun DataOutput.writeFileList(iterable: Iterable<File>) = writeSeq(this, iterable.toList()) { writeFile(it) }
 fun DataOutput.writeFile(it: File) = writeString(it.canonicalPath)
